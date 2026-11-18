@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartLib - Sustainable Library Management & Barcode System</title>
+  <meta name="description" content="A comprehensive library catalogue, barcode reader integration, member tracking, and fine management system aligned with SDGs 4, 9, & 10.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="dark-theme">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">
+        <i data-lucide="book-open-check"></i>
+      </div>
+      <div class="brand-text">
+        <h2>SmartLib<span>OS</span></h2>
+        <span class="badge-sdg">SDG 4 • 9 • 10</span>
+      </div>
+    </div>
+
+    <nav class="nav-menu">
+      <button class="nav-item active" data-tab="dashboard">
+        <i data-lucide="layout-dashboard"></i>
+        <span>Dashboard</span>
+      </button>
+      <button class="nav-item" data-tab="catalogue">
+        <i data-lucide="library"></i>
+        <span>Book Catalogue</span>
+      </button>
+      <button class="nav-item" data-tab="issue-return">
+        <i data-lucide="arrow-left-right"></i>
+        <span>Issue & Return</span>
+      </button>
+      <button class="nav-item" data-tab="barcode-scanner">
+        <i data-lucide="scan-barcode"></i>
+        <span>Barcode Scanner</span>
+      </button>
+      <button class="nav-item" data-tab="members">
+        <i data-lucide="users"></i>
+        <span>Members</span>
+      </button>
+      <button class="nav-item" data-tab="fines">
+        <i data-lucide="banknote"></i>
+        <span>Fines & Overdues</span>
+      </button>
+</nav>
+
+    <div class="sidebar-footer">
+      <div class="system-status">
+        <span class="status-dot online"></span>
+        <span>Barcode Scanner: Ready</span>
+      </div>
+      <button id="themeToggleBtn" class="theme-toggle" title="Toggle Light/Dark Theme">
+        <i data-lucide="sun" class="sun-icon"></i>
+        <i data-lucide="moon" class="moon-icon"></i>
+        <span class="theme-label">Mode</span>
+      </button>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="top-header">
+      <div class="header-search">
+        <i data-lucide="search"></i>
+        <input type="text" id="globalSearchInput" placeholder="Quick search title, ISBN, author, or barcode (Press '/' to focus)...">
+      </div>
+      
+      <div class="header-actions">
+        <button class="action-btn primary" id="quickScanBtn">
+          <i data-lucide="barcode"></i>
+          <span>Scan Barcode</span>
+        </button>
+        <button class="action-btn secondary" id="addBookHeaderBtn">
+          <i data-lucide="plus"></i>
+          <span>Add Book</span>
+        </button>
+
+        <div class="notification-wrapper">
+          <button class="icon-btn" id="notifBtn" title="Alerts">
+            <i data-lucide="bell"></i>
+            <span class="badge-count" id="notifBadge">0</span>
+          </button>
+          <div class="notif-dropdown" id="notifDropdown">
+            <div class="notif-header">
+              <h3>System Alerts</h3>
+              <button id="clearNotifs">Clear All</button>
+            </div>
+            <div class="notif-list" id="notifList"></div>
+          </div>
+        </div>
+    </header>
+
+    <section id="dashboard-tab" class="tab-page active">
+      <div class="page-title-bar">
+        <div>
+          <h1>Library Command Center</h1>
+          <p class="subtitle">Overview of inventory, member circulation, barcode activity, and fine tracking.</p>
+        </div>
+        <div class="quick-stats-meta">
+          <span class="meta-pill"><i data-lucide="clock"></i> Auto-updated: Just now</span>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card glass-card">
+          <div class="stat-icon purple">
+            <i data-lucide="book-copy"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Total Books</span>
+            <h2 id="statTotalBooks">0</h2>
+            <span class="stat-subtext" id="statAvailableBooks">0 Available</span>
+          </div>
+        </div>
+
+        <div class="stat-card glass-card">
+          <div class="stat-icon blue">
+            <i data-lucide="arrow-up-right"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Active Issued</span>
+            <h2 id="statIssuedBooks">0</h2>
+            <span class="stat-subtext text-warning" id="statOverdueBooks">0 Overdue</span>
+          </div>
+        </div>
+
+        <div class="stat-card glass-card">
+          <div class="stat-icon green">
+            <i data-lucide="users"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Registered Members</span>
+            <h2 id="statTotalMembers">0</h2>
+            <span class="stat-subtext" id="statActiveMembers">0 Active</span>
+          </div>
+        </div>
+
+        <div class="stat-card glass-card">
+          <div class="stat-icon amber">
+            <i data-lucide="dollar-sign"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Total Outstanding Fines</span>
+            <h2 id="statTotalFines">$0.00</h2>
+            <span class="stat-subtext text-accent" id="statCollectedFines">$0.00 Collected</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="glass-card panel">
+          <div class="panel-header">
+            <h3><i data-lucide="history"></i> Recent Transactions</h3>
+            <button class="text-link" id="viewAllTransBtn">View All</button>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Book Title</th>
+                  <th>Member</th>
+                  <th>Issue Date</th>
+                  <th>Due Date</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="recentTransTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="glass-card panel">
+          <div class="panel-header">
+            <h3><i data-lucide="zap"></i> Quick Action Desk</h3>
+          </div>
+          
+          <div class="quick-action-box">
+            <div class="input-group">
+              <label><i data-lucide="barcode"></i> Scan or Enter Barcode / ISBN (Auto-searches ISBN Database)</label>
+              <div class="input-with-btn">
+                <input type="text" id="quickBarcodeScanInput" placeholder="e.g. 9780132350884">
+                <button class="btn primary" id="quickAutofillBtn"><i data-lucide="search"></i> Fetch</button>
+              </div>
+            </div>
+
+            <div id="quickSearchLoading" class="quick-search-loading hidden">
+              <div class="spinner-small"></div>
+              <span>Searching ISBN database...</span>
+            </div>
+
+            <div id="quickScanResult" class="quick-scan-result hidden">
+              <div class="scanned-book-preview">
+                <div class="cover-placeholder" id="scannedCover">
+                  <i data-lucide="book"></i>
+                </div>
+                <div class="scanned-details">
+                  <h4 id="scannedTitle">Title Placeholder</h4>
+                  <p id="scannedAuthor">Author Name</p>
+                  <div style="display: flex; gap: 0.5rem; align-items: center; margin-top: 0.25rem;">
+                    <span class="status-badge" id="scannedStatus">Available</span>
+                    <span class="badge-source hidden" id="scannedSourceBadge">ISBN Database</span>
+                  </div>
+                </div>
+              </div>
+              <div class="quick-action-buttons" id="quickActionButtonsContainer">
+                <button class="btn success" id="quickIssueBookBtn"><i data-lucide="arrow-up-right"></i> Issue Book</button>
+                <button class="btn warning" id="quickReturnBookBtn"><i data-lucide="arrow-down-left"></i> Return Book</button>
+                <button class="btn primary hidden" id="quickAddBookBtn"><i data-lucide="plus-circle"></i> Add to Library</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <section class="dashboard-sdg-section" aria-labelledby="dashboardSdgTitle">
+        <div class="dashboard-sdg-heading">
+          <div>
+            <h2 id="dashboardSdgTitle">Community Impact</h2>
+            <p class="subtitle">How SmartLib supports the United Nations Sustainable Development Goals.</p>
+          </div>
+          <span class="dashboard-sdg-tag">UN SDGs 4 / 9 / 10</span>
+        </div>
+
+        <div class="dashboard-sdg-grid">
+          <article class="dashboard-sdg-card glass-card">
+            <div class="dashboard-sdg-topline">
+              <span class="sdg-badge">SDG 04</span>
+              <i data-lucide="book-open"></i>
+            </div>
+            <h3>Quality Education</h3>
+            <p>Improves access to learning materials through an online catalogue and simpler book issuing and returns.</p>
+            <div class="dashboard-sdg-metric">Supports inclusive access to education</div>
+          </article>
+
+          <article class="dashboard-sdg-card glass-card">
+            <div class="dashboard-sdg-topline">
+              <span class="sdg-badge">SDG 09</span>
+              <i data-lucide="cpu"></i>
+            </div>
+            <h3>Industry, Innovation &amp; Infrastructure</h3>
+            <p>Uses web technology, a local database and barcode scanning to digitise everyday library processes.</p>
+            <div class="dashboard-sdg-metric">Encourages accessible digital infrastructure</div>
+          </article>
+
+          <article class="dashboard-sdg-card glass-card">
+            <div class="dashboard-sdg-topline">
+              <span class="sdg-badge">SDG 10</span>
+              <i data-lucide="heart"></i>
+            </div>
+            <h3>Reduced Inequalities</h3>
+            <p>Helps make library resources easier to discover and access for members from different backgrounds.</p>
+            <div class="dashboard-sdg-metric">Promotes fairer access to knowledge</div>
+          </article>
+        </div>
+      </section>
+
+    </section>
+
+    <section id="catalogue-tab" class="tab-page">
+      <div class="page-title-bar">
+        <div>
+          <h1>Book Catalogue & Inventory</h1>
+          <p class="subtitle">Search, manage, add, and generate barcodes for all library books.</p>
+        </div>
+        <button class="btn primary" id="addNewBookBtn">
+          <i data-lucide="plus"></i> Add New Book
+        </button>
+      </div>
+
+      <div class="filters-bar glass-card">
+        <div class="filter-search">
+          <i data-lucide="search"></i>
+          <input type="text" id="catalogueSearchInput" placeholder="Search by title, author, category, ISBN, or barcode...">
+        </div>
+        <div class="filter-options">
+          <select id="categoryFilter">
+            <option value="all">All Categories</option>
+            <option value="Computer Science">Computer Science</option>
+            <option value="Fiction">Fiction</option>
+            <option value="Science">Science</option>
+            <option value="Mathematics">Mathematics</option>
+            <option value="History">History</option>
+            <option value="Philosophy">Philosophy</option>
+          </select>
+
+          <select id="availabilityFilter">
+            <option value="all">All Availability</option>
+            <option value="available">Available Only</option>
+            <option value="issued">Issued Only</option>
+          </select>
+
+          <div class="view-toggle">
+            <button class="toggle-btn active" id="gridViewBtn" title="Grid View"><i data-lucide="grid"></i></button>
+            <button class="toggle-btn" id="listViewBtn" title="Table View"><i data-lucide="list"></i></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="books-grid" id="booksGridContainer"></div>
+
+      <div class="glass-card table-responsive hidden" id="booksTableContainer">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Barcode</th>
+              <th>Book Info</th>
+              <th>Category</th>
+              <th>ISBN</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="booksTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="issue-return-tab" class="tab-page">
+      <div class="page-title-bar">
+        <div>
+          <h1>Book Circulation Desk</h1>
+          <p class="subtitle">Seamless book checkout, return, due date calculation, and active borrowing logs.</p>
+        </div>
+      </div>
+
+      <div class="two-column-layout">
+        <div class="glass-card panel">
+          <div class="panel-header">
+            <h3><i data-lucide="arrow-up-right" class="text-primary"></i> Issue Book to Member</h3>
+          </div>
+          <form id="issueBookForm" class="styled-form">
+            <div class="form-group">
+              <label for="issueSelectBook">Select Book or Scan Barcode *</label>
+              <div class="input-with-btn">
+                <select id="issueSelectBook" required>
+                  <option value="">-- Choose Available Book --</option>
+                </select>
+                <button type="button" class="btn secondary" id="issueScanModalBtn"><i data-lucide="scan"></i> Scan</button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="issueSelectMember">Select Member *</label>
+              <select id="issueSelectMember" required>
+                <option value="">-- Choose Active Library Member --</option>
+              </select>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="issueDate">Issue Date</label>
+                <input type="date" id="issueDate" required>
+              </div>
+              <div class="form-group">
+                <label for="issueDays">Duration (Days)</label>
+                <input type="number" id="issueDays" min="1" max="60" value="14">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="dueDate">Calculated Due Date</label>
+              <input type="date" id="dueDate" readonly class="readonly-input">
+            </div>
+
+            <button type="submit" class="btn primary full-width">
+              <i data-lucide="check-circle"></i> Confirm Book Issue
+            </button>
+          </form>
+        </div>
+
+        <div class="glass-card panel">
+          <div class="panel-header">
+            <h3><i data-lucide="arrow-down-left" class="text-success"></i> Return Issued Book</h3>
+          </div>
+          <form id="returnBookForm" class="styled-form">
+            <div class="form-group">
+              <label for="returnSelectTransaction">Select Issued Book / Barcode *</label>
+              <select id="returnSelectTransaction" required>
+                <option value="">-- Choose Currently Issued Transaction --</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="returnDate">Return Date</label>
+              <input type="date" id="returnDate" required>
+            </div>
+
+            <div class="fine-preview-box glass-card" id="finePreviewBox">
+              <div class="fine-row">
+                <span>Days Overdue:</span>
+                <strong id="overdueDaysCount">0 Days</strong>
+              </div>
+              <div class="fine-row">
+                <span>Calculated Fine ($1.00/day):</span>
+                <strong class="fine-amount" id="calculatedFineAmount">$0.00</strong>
+              </div>
+            </div>
+
+            <button type="submit" class="btn warning full-width">
+              <i data-lucide="rotate-ccw"></i> Process Book Return
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div class="glass-card panel margin-top-lg">
+        <div class="panel-header">
+          <h3><i data-lucide="list-checks"></i> Circulation Ledger & Active Loans</h3>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Transaction ID</th>
+                <th>Book Title</th>
+                <th>Member Name</th>
+                <th>Issue Date</th>
+                <th>Due Date</th>
+                <th>Return Date</th>
+                <th>Fine</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="fullTransactionTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="barcode-scanner-tab" class="tab-page">
+      <div class="page-title-bar">
+        <div>
+          <h1>Smart Barcode Reader & ISBN Database Lookup</h1>
+          <p class="subtitle">Scan physical book barcodes to automatically fetch live metadata, synopsis, cover art & catalog details from global ISBN databases.</p>
+        </div>
+      </div>
+
+      <div class="two-column-layout">
+        <div class="glass-card panel">
+          <div class="panel-header">
+            <h3><i data-lucide="scan-barcode"></i> Camera & Hardware Barcode Scanner</h3>
+            <span class="badge-live"><span class="pulse-dot"></span> Auto-Lookup Active</span>
+          </div>
+
+          <div class="camera-scanner-wrapper">
+            <div id="interactiveReader" class="reader-viewport"></div>
+            <div class="scanner-actions">
+              <button class="btn primary" id="startCamBtn"><i data-lucide="camera"></i> Start Camera Scan</button>
+              <button class="btn danger hidden" id="stopCamBtn"><i data-lucide="square"></i> Stop Camera</button>
+              <label class="btn secondary" id="uploadBarcodeImgBtn" title="Upload a photo of a barcode">
+                <i data-lucide="image"></i> Upload Photo
+                <input type="file" id="barcodeFileInput" accept="image/*" style="display:none;">
+              </label>
+            </div>
+          </div>
+
+          <div class="scanner-direct-bar margin-top-sm">
+            <label for="manualIsbnScanInput"><i data-lucide="keyboard"></i> Handheld Scanner Wedge or Manual ISBN / Barcode</label>
+            <div class="input-with-btn">
+              <input type="text" id="manualIsbnScanInput" placeholder="Scan barcode with handheld reader or type ISBN (e.g. 9780132350884)...">
+              <button class="btn primary" id="manualIsbnSearchBtn"><i data-lucide="search"></i> Search ISBN DB</button>
+            </div>
+          </div>
+
+          <div class="scanned-output-card glass-card margin-top-md">
+            <div class="scan-card-header">
+              <h4><i data-lucide="database"></i> ISBN Database Result:</h4>
+              <span class="badge-source hidden" id="scannerSourceBadge"><i data-lucide="globe"></i> Online Database</span>
+            </div>
+            
+            <div class="scanned-code-display">
+              <span id="detectedBarcodeValue" class="code-val">No Barcode Scanned Yet</span>
+              <button class="btn icon-only secondary" id="copyBarcodeBtn" title="Copy Code"><i data-lucide="copy"></i></button>
+            </div>
+
+            <div id="isbnLookupLoading" class="isbn-lookup-loading hidden margin-top-sm">
+              <div class="spinner"></div>
+              <div class="loading-text">
+                <strong>Searching Global ISBN Database...</strong>
+                <span>Fetching book title, author, cover, publisher, and synopsis</span>
+              </div>
+            </div>
+
+            <div id="matchedBookInfo" class="matched-book-info hidden margin-top-sm"></div>
+          </div>
+        </div>
+
+        <div class="glass-card panel">
+          <div class="panel-header">
+            <h3><i data-lucide="qr-code"></i> Instant Barcode Generator</h3>
+          </div>
+
+          <div class="styled-form">
+            <div class="form-group">
+              <label for="generatorInput">Enter ISBN or Barcode String to Render</label>
+              <div class="input-with-btn">
+                <input type="text" id="generatorInput" placeholder="e.g. 9780132350884" value="9780132350884">
+                <button class="btn primary" id="generateBarcodeBtn"><i data-lucide="sparkles"></i> Generate</button>
+              </div>
+            </div>
+
+            <div class="barcode-preview-container">
+              <svg id="barcodeCanvas"></svg>
+            </div>
+
+            <hr class="divider">
+
+            <h4>Test Real Book Barcodes (Click any to auto-fetch from ISBN database)</h4>
+            <div class="test-barcodes-list" id="testBarcodesContainer"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="members-tab" class="tab-page">
+      <div class="page-title-bar">
+        <div>
+          <h1>Library Member Accounts</h1>
+          <p class="subtitle">Manage user profiles, contact information, active borrowing limits, and member statuses.</p>
+        </div>
+        <button class="btn primary" id="addNewMemberBtn">
+          <i data-lucide="user-plus"></i> Add New Member
+        </button>
+      </div>
+
+      <div class="glass-card panel">
+        <div class="filters-bar">
+          <div class="filter-search">
+            <i data-lucide="search"></i>
+            <input type="text" id="memberSearchInput" placeholder="Search members by name, ID, or email...">
+          </div>
+          <select id="memberStatusFilter">
+            <option value="all">All Statuses</option>
+            <option value="Active">Active</option>
+            <option value="Suspended">Suspended</option>
+          </select>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Member ID</th>
+                <th>Name</th>
+                <th>Contact Details</th>
+                <th>Active Loans</th>
+                <th>Status</th>
+                <th>Unpaid Fines</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="membersTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="fines-tab" class="tab-page">
+      <div class="page-title-bar">
+        <div>
+          <h1>Fines & Overdue Tracker</h1>
+          <p class="subtitle">Monitor late returns, calculate overdue charges, and record fine payments.</p>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card glass-card">
+          <div class="stat-icon red"><i data-lucide="alert-circle"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Pending Overdues</span>
+            <h2 id="pendingOverduesCount">0</h2>
+          </div>
+        </div>
+        <div class="stat-card glass-card">
+          <div class="stat-icon amber"><i data-lucide="dollar-sign"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Total Unpaid Fines</span>
+            <h2 id="unpaidFinesTotal">$0.00</h2>
+          </div>
+        </div>
+        <div class="stat-card glass-card">
+          <div class="stat-icon green"><i data-lucide="check-circle-2"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Total Paid Fines</span>
+            <h2 id="paidFinesTotal">$0.00</h2>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass-card panel margin-top-md">
+        <div class="panel-header">
+          <h3><i data-lucide="receipt"></i> Overdue & Fine Accounts</h3>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Member</th>
+                <th>Book Title</th>
+                <th>Due Date</th>
+                <th>Days Overdue</th>
+                <th>Fine Amount</th>
+                <th>Payment Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="finesTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    
+  </main>
+
+  <div class="modal-overlay" id="bookModal">
+    <div class="modal-container glass-card">
+      <div class="modal-header">
+        <h3 id="bookModalTitle">Add New Book</h3>
+        <button class="icon-btn modal-close" id="closeBookModal"><i data-lucide="x"></i></button>
+      </div>
+      <form id="bookForm" class="styled-form">
+        <input type="hidden" id="bookIdInput">
+        
+        <div class="isbn-modal-banner" id="modalIsbnBanner">
+          <div class="banner-title"><i data-lucide="sparkles"></i> <strong>Instant ISBN Database Auto-Fill</strong></div>
+          <div class="input-with-btn margin-top-xs">
+            <input type="text" id="modalIsbnQueryInput" placeholder="Scan or enter ISBN/Barcode (e.g. 9780132350884)">
+            <button type="button" class="btn primary" id="modalFetchIsbnBtn"><i data-lucide="search"></i> Fetch Details</button>
+          </div>
+          <div id="modalIsbnLoading" class="hidden isbn-loading-row margin-top-xs">
+            <div class="spinner-small"></div>
+            <span>Fetching metadata from ISBN database...</span>
+          </div>
+        </div>
+
+        <div id="modalCoverPreview" class="modal-cover-preview hidden margin-bottom-sm">
+          <img id="modalCoverImg" src="" alt="Cover Preview" onerror="this.parentElement.classList.add('hidden')">
+          <div class="modal-cover-info">
+            <h5 id="modalPreviewTitle">Book Title</h5>
+            <span id="modalPreviewMeta">Author • Category</span>
+            <span class="badge-source" id="modalCoverSource"><i data-lucide="globe"></i> Online Database</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="bookTitleInput">Book Title *</label>
+          <input type="text" id="bookTitleInput" required placeholder="e.g. Clean Code">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="bookAuthorInput">Author *</label>
+            <input type="text" id="bookAuthorInput" required placeholder="e.g. Robert C. Martin">
+          </div>
+          <div class="form-group">
+            <label for="bookCategoryInput">Category *</label>
+            <select id="bookCategoryInput" required>
+              <option value="Computer Science">Computer Science</option>
+              <option value="Fiction">Fiction</option>
+              <option value="Science">Science</option>
+              <option value="Mathematics">Mathematics</option>
+              <option value="History">History</option>
+              <option value="Philosophy">Philosophy</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="bookIsbnInput">ISBN *</label>
+            <div class="input-with-btn">
+              <input type="text" id="bookIsbnInput" required placeholder="e.g. 978-0132350884">
+              <button type="button" class="btn secondary" id="modalLookupFromIsbnFieldBtn" title="Fetch Details for this ISBN"><i data-lucide="search"></i></button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="bookBarcodeInput">Barcode *</label>
+            <div class="input-with-btn">
+              <input type="text" id="bookBarcodeInput" required placeholder="e.g. 9780132350884">
+              <button type="button" class="btn secondary" id="autoGenerateBarcodeBtn" title="Generate Barcode"><i data-lucide="sparkles"></i> Auto</button>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="bookCoverInput">Cover Image URL (Optional)</label>
+          <input type="url" id="bookCoverInput" placeholder="https://images.unsplash.com/...">
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn secondary" id="cancelBookModal">Cancel</button>
+          <button type="submit" class="btn primary">Save Book Record</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="memberModal">
+    <div class="modal-container glass-card">
+      <div class="modal-header">
+        <h3>Register New Library Member</h3>
+        <button class="icon-btn modal-close" id="closeMemberModal"><i data-lucide="x"></i></button>
+      </div>
+      <form id="memberForm" class="styled-form">
+        <div class="form-group">
+          <label for="memberNameInput">Full Name *</label>
+          <input type="text" id="memberNameInput" required placeholder="e.g. Alex Morgan">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="memberEmailInput">Email Address *</label>
+            <input type="email" id="memberEmailInput" required placeholder="e.g. alex@example.com">
+          </div>
+          <div class="form-group">
+            <label for="memberPhoneInput">Phone Number *</label>
+            <input type="tel" id="memberPhoneInput" required placeholder="e.g. +1 555-0192">
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn secondary" id="cancelMemberModal">Cancel</button>
+          <button type="submit" class="btn primary">Register Member</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
