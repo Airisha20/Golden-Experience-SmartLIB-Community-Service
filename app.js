@@ -153,7 +153,7 @@ class LibraryApp {
   }
 
   async apiRequest(endpoint, options = {}) {
-    const response = await fetch(`http://localhost:5000${endpoint}`, {
+    const response = await fetch(`https://smartlib-backend-1mc9.onrender.com${endpoint}`, {
       ...options,
       headers: {
         "Content-Type": "application/json",
@@ -169,25 +169,6 @@ class LibraryApp {
 
     return result;
   }
-
-
-  async apiRequest(endpoint, options = {}) {
-    const response = await fetch(`http://localhost:5000${endpoint}`, {
-        ...options,
-        headers: {
-            "Content-Type": "application/json",
-            ...options.headers
-        }
-    });
-
-    const result = await response.json();
-
-    if (!response.ok || !result.success) {
-        throw new Error(result.message || "Something went wrong.");
-    }
-
-    return result;
-}
 
   showToast(message, type = "info") {
     const container = document.getElementById("toastContainer");
@@ -438,12 +419,12 @@ class LibraryApp {
     document.getElementById("statOverdueBooks").textContent = `${overdueCount} Overdue`;
     document.getElementById("statTotalMembers").textContent = totalMembers;
     document.getElementById("statActiveMembers").textContent = `${activeMembers} Active`;
-    document.getElementById("statTotalFines").textContent = `$${totalFines.toFixed(2)}`;
-    document.getElementById("statCollectedFines").textContent = `$${collectedFines.toFixed(2)} Paid`;
+    document.getElementById("statTotalFines").textContent = `₹${totalFines.toFixed(2)}`;
+    document.getElementById("statCollectedFines").textContent = `₹${collectedFines.toFixed(2)} Paid`;
 
     document.getElementById("pendingOverduesCount").textContent = overdueCount;
-    document.getElementById("unpaidFinesTotal").textContent = `$${totalFines.toFixed(2)}`;
-    document.getElementById("paidFinesTotal").textContent = `$${collectedFines.toFixed(2)}`;
+    document.getElementById("unpaidFinesTotal").textContent = `₹${totalFines.toFixed(2)}`;
+    document.getElementById("paidFinesTotal").textContent = `₹${collectedFines.toFixed(2)}`;
   }
 
   renderCatalogue(searchQuery = "") {
@@ -871,7 +852,7 @@ class LibraryApp {
           </td>
           <td><span class="badge-status ${activeLoansCount > 0 ? 'pending' : 'available'}">${activeLoansCount} Active</span></td>
           <td><span class="badge-status ${m.status.toLowerCase()}">${m.status}</span></td>
-          <td>${unpaidFineTotal > 0 ? `<strong class="text-danger">$${unpaidFineTotal.toFixed(2)}</strong>` : '$0.00'}</td>
+          <td>${unpaidFineTotal > 0 ? `<strong class="text-danger">₹${unpaidFineTotal.toFixed(2)}</strong>` : '$0.00'}</td>
           <td>
             <button class="btn secondary" style="padding:0.4rem 0.6rem;" onclick="app.toggleMemberStatus('${m.id}')">Toggle Status</button>
           </td>
@@ -993,7 +974,7 @@ class LibraryApp {
     const fine = overdueDays * 1.00;
 
     document.getElementById("overdueDaysCount").textContent = `${overdueDays} Days`;
-    document.getElementById("calculatedFineAmount").textContent = `$${fine.toFixed(2)}`;
+    document.getElementById("calculatedFineAmount").textContent = `₹${fine.toFixed(2)}`;
   }
 
   
@@ -1061,7 +1042,7 @@ class LibraryApp {
         <td>${t.issueDate}</td>
         <td>${t.dueDate}</td>
         <td>${t.returnDate || '<span class="text-warning">On Loan</span>'}</td>
-        <td>${t.fineAmount > 0 ? `<span class="text-danger">$${t.fineAmount.toFixed(2)}</span>` : '$0.00'}</td>
+        <td>${t.fineAmount > 0 ? `<span class="text-danger">₹${t.fineAmount.toFixed(2)}</span>` : '$0.00'}</td>
         <td><span class="badge-status ${t.status.toLowerCase()}">${t.status}</span></td>
       </tr>
     `).join('');
@@ -1082,7 +1063,7 @@ class LibraryApp {
         <td>${t.bookTitle}</td>
         <td>${t.dueDate}</td>
         <td><strong class="text-warning">${t.status === "Overdue" ? "Active Overdue" : "Late Return"}</strong></td>
-        <td><strong class="text-danger">$${t.fineAmount.toFixed(2)}</strong></td>
+        <td><strong class="text-danger">₹${t.fineAmount.toFixed(2)}</strong></td>
         <td><span class="badge-status ${t.finePaid ? 'paid' : 'unpaid'}">${t.finePaid ? 'Paid' : 'Unpaid'}</span></td>
         <td>
           ${!t.finePaid ? `<button class="btn success" style="padding:0.4rem 0.8rem;" onclick="app.payFine('${t.id}')">Collect Payment</button>` : '<span class="text-success"><i data-lucide="check"></i> Cleared</span>'}
